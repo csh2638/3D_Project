@@ -18,22 +18,22 @@ public class InputManager
         }
 
 
-        if(MouseAction != null)
-        {
-            if(Input.GetMouseButton(0))
-            {
-                MouseAction.Invoke(Settings.MouseEvent.Press);
-                _pressed = true;
-            }
-            else
-            {
-                if(_pressed)
-                {
-                    MouseAction.Invoke(Settings.MouseEvent.Click);
-                }
-                _pressed = false;
-            }
-        }
+        //if(MouseAction != null)
+        //{
+        //    if(Input.GetMouseButton(0))
+        //    {
+        //        MouseAction.Invoke(Settings.MouseEvent.Press);
+        //        _pressed = true;
+        //    }
+        //    else
+        //    {
+        //        if(_pressed)
+        //        {
+        //            MouseAction.Invoke(Settings.MouseEvent.Click);
+        //        }
+        //        _pressed = false;
+        //    }
+        //}
 
 
     }
