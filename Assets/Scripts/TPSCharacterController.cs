@@ -10,21 +10,22 @@ public class TPSCharacterController : MonoBehaviour
     [SerializeField]
     private Transform cameraArm;
 
-    
-    Animator animator;
 
-    // Start is called before the first frame update
+    [SerializeField]
+    float _speed = 5.0f;
+
+    Animator animator;
     void Start()
     {
         animator = characterBody.GetComponent<Animator>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         LookAround();
         Move2();
     }
+
     private Vector3 m_LastPosition;
     private void Move()
     {
@@ -40,7 +41,7 @@ public class TPSCharacterController : MonoBehaviour
 
             Vector3 moveDir = lookFoward * moveInput.y  + lookRight * moveInput.x;
 
-            characterBody.forward = moveDir;
+            characterBody.forward = moveDir.normalized;
 
             //transform.position += moveDir * Time.deltaTime * 5f;
             transform.position += Vector3.ClampMagnitude(moveDir, 1f) * Time.deltaTime * 5f;
@@ -48,65 +49,76 @@ public class TPSCharacterController : MonoBehaviour
         }
         Debug.DrawRay(cameraArm.position, new Vector3(cameraArm.forward.x, 0f, cameraArm.forward.z).normalized, Color.red);
 
-        float speed = (((transform.position - m_LastPosition).magnitude) / Time.deltaTime);
-        m_LastPosition = transform.position;
-        //Debug.Log(speed);
+       
     }
 
+    bool ismoving = false;
+    bool isfront = false;
+    bool isback = false;
     private void Move2()
     {
-        Debug.DrawRay(cameraArm.position, new Vector3(cameraArm.forward.x, 0f, cameraArm.forward.z).normalized, Color.red);
-
-
+        
         Vector3 lookFoward = new Vector3(cameraArm.forward.x, 0f, cameraArm.forward.z).normalized;
-        Debug.Log(lookFoward);
-
-        Vector3 direction = lookFoward;
-        // 정면을 기준으로 한다면 transform.forward; 를 입렵하면 된다.
-
-        var quaternion = Quaternion.Euler(0, -90, 0);
-        Vector3 newDirection = quaternion * direction;
-
-
-        characterBody.forward = lookFoward;
-
+        Vector3 newDirection = new Vector3(0,0,0);
         if (Input.GetKey(KeyCode.W))
         {
-            transform.position += Vector3.ClampMagnitude(lookFoward, 1f) * Time.deltaTime * 5f;
-            //transform.position += Vector3.forward * Time.deltaTime * 5f;
-            if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.LeftShift))
-            {
-                transform.position += (Vector3.forward).normalized * 1.2f * Time.deltaTime * 5f;
-            }
+            newDirection = lookFoward; // 현재 방향 기준으로 왼쪽 재정의
+            ismoving = true;
+            isfront = true;
         }
-
         if (Input.GetKey(KeyCode.S))
         {
-            transform.position += Vector3.back * Time.deltaTime * 5f;
-            if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.LeftShift))
-            {
-                transform.position += (Vector3.back).normalized * 1.2f * Time.deltaTime * 5f;
-            }
+            newDirection = -lookFoward; // 현재 방향 기준으로 왼쪽 재정의
+            ismoving = true;
+            isback = true;
         }
-
-        
         if (Input.GetKey(KeyCode.A))
         {
-            transform.position += newDirection * Time.deltaTime * 5f;
-            if (Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.LeftShift))
-            {
-                transform.position += (Vector3.left).normalized * 1.2f * Time.deltaTime * 5f;
-            }
+            newDirection = Quaternion.Euler(0f, -90f, 0f) * lookFoward; // 현재 방향 기준으로 왼쪽 재정의
+            ismoving = true;
         }
-
         if (Input.GetKey(KeyCode.D))
         {
-            transform.position += Vector3.right * Time.deltaTime * 5f;
-            if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.LeftShift))
-            {
-                transform.position += (Vector3.right).normalized * 1.2f * Time.deltaTime * 5f;
-            }
+            newDirection = Quaternion.Euler(0f, 90f, 0f) * lookFoward; // 현재 방향 기준으로 왼쪽 재정의
+            ismoving = true;
         }
+
+        //characterBody.forward = (newDirection + lookFoward).normalized;
+        
+        if (ismoving)
+        {
+            if (isfront)
+            {
+                characterBody.forward = (newDirection + lookFoward).normalized;
+                transform.position += (newDirection + lookFoward).normalized * Time.deltaTime * _speed;
+            }
+            
+            else if(isback)
+            {
+                characterBody.forward = (newDirection - lookFoward).normalized;
+                transform.position += (newDirection - lookFoward).normalized * Time.deltaTime * _speed;
+            }
+            else
+            {
+                characterBody.forward = (newDirection).normalized;
+                transform.position += newDirection.normalized * Time.deltaTime * _speed;
+            }
+            
+
+        }
+        ismoving = false;
+        isback = false;
+        isfront = false;
+
+
+
+        Debug.DrawRay(cameraArm.position, lookFoward.normalized, Color.red);
+        Debug.DrawRay(cameraArm.position, newDirection.normalized, Color.yellow);
+        //Debug.DrawRay(cameraArm.position, (-lookFoward).normalized, Color.black);
+        //Debug.DrawRay(cameraArm.position, (newDirection + lookFoward), Color.yellow);
+        //Debug.DrawRay(cameraArm.position, (newDirection + (lookFoward)), Color.yellow);
+
+
     }
 
     private void LookAround()
@@ -123,8 +135,6 @@ public class TPSCharacterController : MonoBehaviour
         {
             x = Mathf.Clamp(x, 335.0f, 361.0f);
         }
-
-
         cameraArm.rotation = Quaternion.Euler(x, cameraAngle.y + mouseDelta.x, cameraAngle.z);
     }
 }
